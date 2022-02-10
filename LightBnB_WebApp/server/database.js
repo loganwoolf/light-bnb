@@ -8,7 +8,7 @@ const pool = new Pool({
   database: process.env.PG_DB,
 });
 
-// const properties = require('./json/properties.json');
+const properties = require('./json/properties.json');
 // const users = require('./json/users.json');
 
 /// Users
@@ -112,12 +112,53 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  const queryString = 'SELECT * FROM properties LIMIT $1';
-  const values = [limit];
+  // determines whether a WHERE or an AND needs to be put in
+  let whereCount = 0;
+  const where = () => {
+    return whereCount++ > 0 ? "AND" : "WHERE";
+  };
+
+  // holds the query parameters for .query() to apply to its $1..$n placeholders
+  // populated with .push() when needed to set correct placeholder index
+  const queryParams = [];
+
+  let queryString = ` 
+    SELECT properties.*, AVG(property_reviews.rating) AS average_rating 
+    FROM properties 
+    JOIN property_reviews ON properties.id = property_id `;
+  if (options.owner_id) {
+    queryParams.push(options.owner_id);
+    queryString += `${where()} owner_id = $${queryParams.length}`;
+  }
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    queryString += `${where()} city LIKE $${queryParams.length} `;
+  }
+  if (options.minimum_price_per_night) {
+    queryParams.push(options.minimum_price_per_night);
+    queryString += `${where()} cost_per_night >= $${queryParams.length} `;
+  }
+  if (options.maximum_price_per_night) {
+    queryParams.push(options.maximum_price_per_night);
+    queryString += `${where()} cost_per_night <= $${queryParams.length} `;
+  }
+  //string must come before any HAVING clauses
+  queryString += ` 
+    GROUP BY properties.id `;
+  if (options.minimum_rating) {
+    queryParams.push(options.minimum_rating);
+    queryString += `HAVING AVG(property_reviews.rating) >= $${queryParams.length} `;
+  }
+  queryParams.push(limit);
+  queryString += ` 
+  ORDER BY cost_per_night 
+  LIMIT $${queryParams.length} `;
 
   return pool
-    .query(queryString, values)
-    .then(result => result.rows)
+    .query(queryString, queryParams)
+    .then(result => {
+      return result.rows;
+    })
     .catch(err => console.error(err.message));
 };
 exports.getAllProperties = getAllProperties;
