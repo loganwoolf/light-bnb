@@ -19,7 +19,6 @@ const pool = new Pool({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  console.log('attempting to log in:', email);
   const queryString = 'SELECT * FROM users WHERE email = $1';
   const values = [email];
 
@@ -66,8 +65,7 @@ const addUser =  function(user) {
   const queryString = `
     INSERT INTO users (name, email, password)
     VALUES ($1, $2, $3)
-    RETURNING *
-    `;
+    RETURNING *`;
   const values = [user.name, user.email, 'password'];
 
   return pool
@@ -83,11 +81,25 @@ exports.addUser = addUser;
 
 /**
  * Get all reservations for a single user.
- * @param {string} guest_id The id of the user.
+ * @param {string} guestID The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+const getAllReservations = function(guestID, limit = 10) {
+  const queryString = `
+    SELECT * FROM reservations
+    JOIN properties ON properties.id = property_id
+    WHERE guest_id = $1 LIMIT $2`;
+  const values = [guestID, limit];
+
+  return pool
+    .query(queryString, values)
+    .then(result => {
+      return result.rows;
+    })
+    .catch(err => {
+      console.error(err.message);
+      return null;
+    });
 };
 exports.getAllReservations = getAllReservations;
 
@@ -100,8 +112,11 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
+  const queryString = 'SELECT * FROM properties LIMIT $1';
+  const values = [limit];
+
   return pool
-    .query('SELECT * FROM properties LIMIT $1', [limit])
+    .query(queryString, values)
     .then(result => result.rows)
     .catch(err => console.error(err.message));
 };
