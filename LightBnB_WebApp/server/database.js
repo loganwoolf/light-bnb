@@ -170,9 +170,56 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  console.clear();
+  console.log({property});
+  let counter = 1;
+  const n = () => {
+    return counter++;
+  };
+
+  const queryValues = [
+    property.title, property.description, property.number_of_bedrooms, property.number_of_bathrooms,
+    property.parking_spaces, property.cost_per_night, property.thumbnail_photo_url,
+    property.cover_photo_url, property.street, property.country, property.city, property.province,
+    property.post_code, property.owner_id
+  ];
+  const queryString = `
+    INSERT INTO properties (
+      title, description, number_of_bedrooms, number_of_bathrooms,
+      parking_spaces, cost_per_night, thumbnail_photo_url, cover_photo_url,
+      street, country, city, province, post_code, owner_id)
+    VALUES (
+      $${n()}, $${n()}, $${n()}, $${n()}, $${n()}, $${n()}, $${n()},
+      $${n()}, $${n()}, $${n()}, $${n()}, $${n()}, $${n()}, $${n()})
+      RETURNING * `;
+
+  return pool
+    .query(queryString, queryValues)
+    .then(result => result.rows)
+    .catch(err => console.error(err.message));
+
+
+/*property: {
+    title: 'aaa',
+    description: 'bbb',
+    number_of_bedrooms: '1',
+    number_of_bathrooms: '2',
+    parking_spaces: '3',
+    cost_per_night: '4',
+    thumbnail_photo_url: 'ccc',
+    cover_photo_url: 'ddd',
+    street: 'eee',
+    country: 'CA',
+    city: 'fff',
+    province: 'YT',
+    post_code: 'gggggg',
+    owner_id: 160
+  }
+*/
+  // OLD
+  // const propertyId = Object.keys(properties).length + 1;
+  // property.id = propertyId;
+  // properties[propertyId] = property;
+  // return Promise.resolve(property);
 };
 exports.addProperty = addProperty;
