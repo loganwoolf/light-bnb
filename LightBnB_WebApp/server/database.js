@@ -1,15 +1,4 @@
-require('dotenv').config();
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  user: process.env.PG_USER,
-  password: process.env.PG_PASS,
-  host: process.env.PG_HOST,
-  database: process.env.PG_DB,
-});
-
-const properties = require('./json/properties.json');
-// const users = require('./json/users.json');
+const db = require('../db')
 
 /// Users
 
@@ -22,7 +11,7 @@ const getUserWithEmail = function(email) {
   const queryString = 'SELECT * FROM users WHERE email = $1';
   const values = [email];
 
-  return pool
+  return db
     .query(queryString, values)
     .then(result => {
       return result.rows[0];
@@ -43,7 +32,7 @@ const getUserWithId = function(id) {
   const queryString = 'SELECT * FROM users WHERE id = $1';
   const values = [id];
 
-  return pool
+  return db
     .query(queryString, values)
     .then(result => {
       return result.rows[0];
@@ -68,7 +57,7 @@ const addUser =  function(user) {
     RETURNING *`;
   const values = [user.name, user.email, 'password'];
 
-  return pool
+  return db
     .query(queryString, values)
     .then(result => {
       return result.rows[0];
@@ -91,7 +80,7 @@ const getAllReservations = function(guestID, limit = 10) {
     WHERE guest_id = $1 LIMIT $2`;
   const values = [guestID, limit];
 
-  return pool
+  return db
     .query(queryString, values)
     .then(result => {
       return result.rows;
@@ -154,7 +143,7 @@ const getAllProperties = function(options, limit = 10) {
   ORDER BY cost_per_night 
   LIMIT $${queryParams.length} `;
 
-  return pool
+  return db
     .query(queryString, queryParams)
     .then(result => {
       return result.rows;
@@ -191,7 +180,7 @@ const addProperty = function(property) {
       $${n()}, $${n()}, $${n()}, $${n()}, $${n()}, $${n()}, $${n()})
       RETURNING * `;
 
-  return pool
+  return db
     .query(queryString, queryValues)
     .then(result => result.rows)
     .catch(err => console.error(err.message));
