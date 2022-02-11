@@ -170,8 +170,6 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  console.clear();
-  console.log({property});
   let counter = 1;
   const n = () => {
     return counter++;
@@ -198,28 +196,5 @@ const addProperty = function(property) {
     .then(result => result.rows)
     .catch(err => console.error(err.message));
 
-
-/*property: {
-    title: 'aaa',
-    description: 'bbb',
-    number_of_bedrooms: '1',
-    number_of_bathrooms: '2',
-    parking_spaces: '3',
-    cost_per_night: '4',
-    thumbnail_photo_url: 'ccc',
-    cover_photo_url: 'ddd',
-    street: 'eee',
-    country: 'CA',
-    city: 'fff',
-    province: 'YT',
-    post_code: 'gggggg',
-    owner_id: 160
-  }
-*/
-  // OLD
-  // const propertyId = Object.keys(properties).length + 1;
-  // property.id = propertyId;
-  // properties[propertyId] = property;
-  // return Promise.resolve(property);
 };
 exports.addProperty = addProperty;
